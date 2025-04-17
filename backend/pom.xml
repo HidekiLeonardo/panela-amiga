@@ -12,7 +12,7 @@
 	<artifactId>panela-amiga</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>panela-amiga</name>
-	<description>Cadastro de receitas culinárias com funcionalidades completas de CRUD: criar, ler, atualizar e deletar.</description>
+	<description>Cadastro de receitas culinárias no CRUD: criar, ler, atualizar e deletar.</description>
 	<url/>
 	<licenses>
 		<license/>

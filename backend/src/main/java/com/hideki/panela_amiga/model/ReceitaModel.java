@@ -2,15 +2,11 @@ package com.hideki.panela_amiga.model;
 
 import com.hideki.panela_amiga.model.enums.CategoriaReceita;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "tb_receitas")
 public class ReceitaModel {

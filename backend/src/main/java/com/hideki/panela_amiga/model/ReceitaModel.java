@@ -19,12 +19,14 @@ public class ReceitaModel {
 
     private String ingredientes;
 
+    @Column(name = "modo_preparo")
     private String modoPreparo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CategoriaReceita categoria;
 
+    @Column(name = "tempo_preparo")
     private int tempoPreparo;
 
     private int porcoes;

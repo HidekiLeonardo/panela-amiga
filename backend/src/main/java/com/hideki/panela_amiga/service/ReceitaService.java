@@ -5,7 +5,6 @@ import com.hideki.panela_amiga.mapper.ReceitaMapper;
 import com.hideki.panela_amiga.model.ReceitaModel;
 import com.hideki.panela_amiga.repository.ReceitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

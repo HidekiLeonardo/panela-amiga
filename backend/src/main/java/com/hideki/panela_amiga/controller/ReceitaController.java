@@ -1,7 +1,6 @@
 package com.hideki.panela_amiga.controller;
 
 import com.hideki.panela_amiga.dto.ReceitaDTO;
-import com.hideki.panela_amiga.model.ReceitaModel;
 import com.hideki.panela_amiga.service.ReceitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

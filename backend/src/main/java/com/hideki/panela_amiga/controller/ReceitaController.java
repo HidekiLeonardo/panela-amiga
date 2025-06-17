@@ -1,5 +1,6 @@
 package com.hideki.panela_amiga.controller;
 
+import com.hideki.panela_amiga.dto.ReceitaDTO;
 import com.hideki.panela_amiga.model.ReceitaModel;
 import com.hideki.panela_amiga.service.ReceitaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,25 +17,25 @@ public class ReceitaController {
 
     // Adicionar Receita
     @PostMapping
-    public ReceitaModel addReceita(@RequestBody ReceitaModel receita) {
+    public ReceitaDTO addReceita(@RequestBody ReceitaDTO receita) {
         return receitaService.addReceita(receita);
     }
 
     // Mostrar Receita (ID)
     @GetMapping("/{id}")
-    public ReceitaModel mostrarReceita(@PathVariable Long id) {
+    public ReceitaDTO mostrarReceita(@PathVariable Long id) {
         return receitaService.mostrarReceita(id);
     }
 
     // Mostar Receitas
     @GetMapping
-    public List<ReceitaModel> mostrarTodasReceitas() {
+    public List<ReceitaDTO> mostrarTodasReceitas() {
         return receitaService.mostrarTodasReceitas();
     }
 
     // Alterar Receita
     @PutMapping("/{id}")
-    public ReceitaModel alterarReceita(@PathVariable Long id, @RequestBody ReceitaModel receita) {
+    public ReceitaDTO alterarReceita(@PathVariable Long id, @RequestBody ReceitaDTO receita) {
         return receitaService.alterarReceita(id, receita);
     }
 

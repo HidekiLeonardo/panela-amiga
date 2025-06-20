@@ -4,9 +4,6 @@ import com.hideki.panela_amiga.model.enums.CategoriaReceita;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity

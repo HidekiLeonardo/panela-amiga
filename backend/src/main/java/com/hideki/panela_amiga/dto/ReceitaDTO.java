@@ -3,9 +3,6 @@ package com.hideki.panela_amiga.dto;
 import com.hideki.panela_amiga.model.enums.CategoriaReceita;
 import lombok.*;
 
-@Data
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReceitaDTO {

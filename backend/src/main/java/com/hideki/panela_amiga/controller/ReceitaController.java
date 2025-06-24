@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/receitas")
 public class ReceitaController {
 
-    @Autowired
-    private ReceitaService receitaService;
+    private final ReceitaService receitaService;
+
+    public ReceitaController(ReceitaService receitaService) {
+        this.receitaService = receitaService;
+    }
 
     // Adicionar Receita
     @PostMapping

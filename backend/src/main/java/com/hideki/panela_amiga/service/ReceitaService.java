@@ -14,10 +14,13 @@ import java.util.stream.Collectors;
 @Service
 public class ReceitaService {
 
-    @Autowired
-    private ReceitaRepository receitaRepository;
-    @Autowired
-    private ReceitaMapper receitaMapper;
+    private final ReceitaRepository receitaRepository;
+    private final ReceitaMapper receitaMapper;
+
+    public ReceitaService(ReceitaRepository receitaRepository, ReceitaMapper receitaMapper) {
+        this.receitaRepository = receitaRepository;
+        this.receitaMapper = receitaMapper;
+    }
 
     // Adicionar Receita
     public ReceitaDTO addReceita(ReceitaDTO receitaDTO) {

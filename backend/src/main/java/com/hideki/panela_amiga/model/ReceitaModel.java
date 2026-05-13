@@ -3,9 +3,15 @@ package com.hideki.panela_amiga.model;
 import com.hideki.panela_amiga.model.enums.CategoriaReceita;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 @Entity
 @ToString
 @Table(name = "tb_receitas")
@@ -18,8 +24,8 @@ public class ReceitaModel {
     @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false)
-    private String ingredientes;
+    @OneToMany(mappedBy = "receita", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<IngredienteReceita> ingredientes;
 
     @Column(name = "modo_preparo", nullable = false)
     private String modoPreparo;
@@ -34,59 +40,19 @@ public class ReceitaModel {
     @Column(nullable = false)
     private int porcoes;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(nullable = false)
+    private boolean ativo = true;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "data_criacao", nullable = false)
+    @CreationTimestamp
+    private LocalDateTime dataCriacao;
 
-    public String getNome() {
-        return nome;
-    }
+    @Column(nullable = false)
+    private Double rendimento;
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    @Column(name = "custo_total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal custoTotal;
 
-    public String getIngredientes() {
-        return ingredientes;
-    }
-
-    public void setIngredientes(String ingredientes) {
-        this.ingredientes = ingredientes;
-    }
-
-    public String getModoPreparo() {
-        return modoPreparo;
-    }
-
-    public void setModoPreparo(String modoPreparo) {
-        this.modoPreparo = modoPreparo;
-    }
-
-    public CategoriaReceita getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(CategoriaReceita categoria) {
-        this.categoria = categoria;
-    }
-
-    public int getTempoPreparo() {
-        return tempoPreparo;
-    }
-
-    public void setTempoPreparo(int tempoPreparo) {
-        this.tempoPreparo = tempoPreparo;
-    }
-
-    public int getPorcoes() {
-        return porcoes;
-    }
-
-    public void setPorcoes(int porcoes) {
-        this.porcoes = porcoes;
-    }
+    @Column(name = "preco_venda", nullable = false, precision = 10, scale = 2)
+    private BigDecimal precoVenda;
 }

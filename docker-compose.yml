@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: panela-amiga-db
+    environment:
+      POSTGRES_DB: panela_amiga
+      POSTGRES_USER: panela_amiga
+      POSTGRES_PASSWORD: sa
+    ports:
+      - "5433:5432"
+    volumes:
+      - panela_amiga_data:/var/lib/postgresql/data
+
+volumes:
+  panela_amiga_data:

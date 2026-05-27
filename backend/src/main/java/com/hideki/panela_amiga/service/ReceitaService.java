@@ -32,6 +32,14 @@ public class ReceitaService {
     public ReceitaDTO addReceita(ReceitaDTO receitaDTO) {
         validarReceita(receitaDTO);
         ReceitaModel receita = receitaMapper.toModel(receitaDTO);
+        BigDecimal custoTotal = receita.getIngredientes().stream()
+                .map(item -> {
+                    BigDecimal quantidade = item.getQuantidade();
+                    BigDecimal custoUnitario = item.getIngrediente().getCustoUnitario();
+                    return custoUnitario.multiply(quantidade);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        receita.setCustoTotal(custoTotal);
         receita = receitaRepository.save(receita);
         return receitaMapper.toDTO(receita);
     }

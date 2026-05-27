@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,11 +23,23 @@ public class RelatorioFinanceiroService {
         this.transacaoFinanceiraMapper = transacaoFinanceiraMapper;
     }
 
-    public RelatorioFinanceiroDTO gerarRelatorio() {
-        List<TransacaoFinanceiraDTO> transacaoFinanceira = transacaoFinanceiraRepository.findAll()
-                .stream()
-                .map(transacaoFinanceiraMapper::toDTO)
-                .toList();
+    public RelatorioFinanceiroDTO gerarRelatorio(
+            LocalDate dataInicio,
+            LocalDate dataFim
+    ) {
+        List<TransacaoFinanceiraDTO> transacaoFinanceira;
+
+        if (dataInicio != null  && dataFim != null){
+            transacaoFinanceira = transacaoFinanceiraRepository.findByDataBetween(dataInicio, dataFim)
+                    .stream()
+                    .map(transacaoFinanceiraMapper::toDTO)
+                    .toList();
+        } else {
+            transacaoFinanceira = transacaoFinanceiraRepository.findAll()
+                    .stream()
+                    .map(transacaoFinanceiraMapper::toDTO)
+                    .toList();
+        }
 
         BigDecimal totalEntradas = transacaoFinanceira.stream()
                 .filter(t -> t.getTipoTransacao() == TipoTransacao.ENTRADA)

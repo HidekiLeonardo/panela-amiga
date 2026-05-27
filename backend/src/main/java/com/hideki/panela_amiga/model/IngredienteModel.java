@@ -39,7 +39,7 @@ public class IngredienteModel {
     private BigDecimal custoUnitario;
 
     @Column(name = "quantidade_em_estoque")
-    private Long quantidadeEstoque;
+    private BigDecimal quantidadeEstoque;
 
     @Column(name = "data_validade", nullable = false)
     private LocalDate dataValidade;

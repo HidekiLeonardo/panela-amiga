@@ -2,9 +2,11 @@ package com.hideki.panela_amiga.service;
 
 import com.hideki.panela_amiga.dto.IngredienteDTO;
 import com.hideki.panela_amiga.exception.IngredienteNotFoundException;
+import com.hideki.panela_amiga.exception.IngredienteUsingException;
 import com.hideki.panela_amiga.mapper.IngredienteMapper;
 import com.hideki.panela_amiga.model.IngredienteModel;
 import com.hideki.panela_amiga.repository.IngredienteRepository;
+import com.hideki.panela_amiga.repository.ReceitaRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,10 +20,12 @@ public class IngredienteService {
 
     private final IngredienteRepository ingredienteRepository;
     private final IngredienteMapper ingredienteMapper;
+    private final ReceitaRepository receitaRepository;
 
-    public IngredienteService(IngredienteRepository ingredienteRepository, IngredienteMapper ingredienteMapper) {
+    public IngredienteService(IngredienteRepository ingredienteRepository, IngredienteMapper ingredienteMapper, ReceitaRepository receitaRepository) {
         this.ingredienteRepository = ingredienteRepository;
         this.ingredienteMapper = ingredienteMapper;
+        this.receitaRepository = receitaRepository;
     }
 
     // Adicionar Ingrediente
@@ -67,9 +71,10 @@ public class IngredienteService {
     public void deletarIngrediente(Long id) {
         IngredienteModel ingrediente = ingredienteRepository.findById(id)
                 .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
-        if (ingrediente != null) {
-            ingredienteRepository.deleteById(id);
+        if (receitaRepository.existeReceitaAtivaComIngrediente(id)){
+            throw new IngredienteUsingException("Ingrediente com o ID " + id + " está em uso. Não será possível deletar");
         }
+        ingredienteRepository.deleteById(id);
     }
 
     // Buscar por Nome
@@ -97,12 +102,12 @@ public class IngredienteService {
     }
 
     // Buscar Ingredientes Proximo do Vencimento
-    public List<IngredienteDTO> buscarIngredienteProximoValidade(LocalDate data) {
+    public List<IngredienteDTO> buscarIngredienteProximoValidade(LocalDate dataLimite) {
         return ingredienteRepository.findAll().stream()
                 .filter(ingrediente -> {
                     LocalDate validade = ingrediente.getDataValidade();
                     return !validade.isBefore(LocalDate.now()) &&
-                            !validade.isAfter(data);
+                            !validade.isAfter(dataLimite);
                 })
                 .map(ingredienteMapper::toDTO)
                 .collect(Collectors.toList());
@@ -113,13 +118,13 @@ public class IngredienteService {
         List<IngredienteModel> ingredientes = ingredienteRepository.findAll();
         return ingredientes.stream()
                 .filter(ingrediente ->
-                    ingrediente.getQuantidadeEstoque() == 0)
+                    ingrediente.getQuantidadeEstoque().compareTo(BigDecimal.ZERO) == 0)
                 .map(ingredienteMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     // Atualizar Estoque
-    public IngredienteDTO atualizarEstoqueIngrediente(Long id, Long novaQuantidade) {
+    public IngredienteDTO atualizarEstoqueIngrediente(Long id, BigDecimal novaQuantidade) {
         IngredienteModel ingrediente = ingredienteRepository.findById(id)
                 .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
         ingrediente.setQuantidadeEstoque(novaQuantidade);
@@ -140,7 +145,7 @@ public class IngredienteService {
         if (dto.getDataValidade() == null) {
             throw new IllegalArgumentException("Data de validade é obrigatória.");
         }
-        if (dto.getQuantidadeEstoque() != null && dto.getQuantidadeEstoque() < 0) {
+        if (dto.getQuantidadeEstoque() != null && dto.getQuantidadeEstoque().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Quantidade em estoque não pode ser negativa.");
         }
         if (dto.getCustoUnitario() != null && dto.getCustoUnitario().compareTo(BigDecimal.ZERO) < 0) {

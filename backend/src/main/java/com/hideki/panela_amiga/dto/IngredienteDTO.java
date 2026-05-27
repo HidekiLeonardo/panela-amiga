@@ -20,7 +20,7 @@ public class IngredienteDTO {
     private String marca;
     private String fornecedor;
     private BigDecimal custoUnitario;
-    private Long quantidadeEstoque;
+    private BigDecimal quantidadeEstoque;
     private LocalDate dataValidade;
     private LocalDateTime dataAtualizacao;
 

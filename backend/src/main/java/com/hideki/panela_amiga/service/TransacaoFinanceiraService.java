@@ -1,11 +1,17 @@
 package com.hideki.panela_amiga.service;
 
 import com.hideki.panela_amiga.dto.TransacaoFinanceiraDTO;
+import com.hideki.panela_amiga.exception.EstoqueInsuficienteException;
 import com.hideki.panela_amiga.exception.TransacaoFinanceiraNotFoundException;
 import com.hideki.panela_amiga.mapper.TransacaoFinanceiraMapper;
+import com.hideki.panela_amiga.model.IngredienteModel;
+import com.hideki.panela_amiga.model.IngredienteReceita;
+import com.hideki.panela_amiga.model.ReceitaModel;
 import com.hideki.panela_amiga.model.TransacaoFinanceiraModel;
 import com.hideki.panela_amiga.model.enums.OrigemTransacao;
 import com.hideki.panela_amiga.model.enums.TipoTransacao;
+import com.hideki.panela_amiga.repository.IngredienteRepository;
+import com.hideki.panela_amiga.repository.ReceitaRepository;
 import com.hideki.panela_amiga.repository.TransacaoFinanceiraRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +26,14 @@ public class TransacaoFinanceiraService {
 
     private final TransacaoFinanceiraRepository transacaoFinanceiraRepository;
     private final TransacaoFinanceiraMapper transacaoFinanceiraMapper;
+    private final ReceitaRepository receitaRepository;
+    private final IngredienteRepository ingredienteRepository;
 
-    public TransacaoFinanceiraService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper) {
+    public TransacaoFinanceiraService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper, IngredienteRepository ingredienteRepository, ReceitaRepository receitaRepository) {
         this.transacaoFinanceiraRepository = transacaoFinanceiraRepository;
         this.transacaoFinanceiraMapper = transacaoFinanceiraMapper;
+        this.receitaRepository = receitaRepository;
+        this.ingredienteRepository = ingredienteRepository;
     }
 
 // Adicionar Transacao
@@ -31,6 +41,10 @@ public class TransacaoFinanceiraService {
         validarTransacao(transacaoFinanceiraDTO);
         TransacaoFinanceiraModel transacaoFinanceira = transacaoFinanceiraMapper.toModel(transacaoFinanceiraDTO);
         transacaoFinanceira = transacaoFinanceiraRepository.save(transacaoFinanceira);
+        if (transacaoFinanceira.getTipoTransacao() == TipoTransacao.ENTRADA) {
+            consumirEstoque(transacaoFinanceira.getReceita());
+
+        }
         return transacaoFinanceiraMapper.toDTO(transacaoFinanceira);
     }
 
@@ -82,10 +96,26 @@ public class TransacaoFinanceiraService {
                 .collect(Collectors.toList());
     }
 
+    private void consumirEstoque(ReceitaModel receita) {
+        ReceitaModel receitaModel = receitaRepository.findById(receita.getId())
+                .orElseThrow(() -> new RuntimeException("Receita não encontrada."));
+        for (IngredienteReceita ir : receitaModel.getIngredientes()) {
+            IngredienteModel ingredienteModel = ir.getIngrediente();
+            BigDecimal quantidadeUsada = ir.getQuantidade();
+            if (ingredienteModel.getQuantidadeEstoque().compareTo(quantidadeUsada) >= 0){
+                ingredienteModel.setQuantidadeEstoque(ingredienteModel.getQuantidadeEstoque().subtract(quantidadeUsada));
+                ingredienteRepository.save(ingredienteModel);
+            } else {
+                throw new EstoqueInsuficienteException("Estoque insuficiente para o ingrediente " + ingredienteModel.getNome() +".");
+            }
+        }
+    }
 
     private void validarTransacao(TransacaoFinanceiraDTO dto) {
-        if (dto.getReceitaId() == null) {
-            throw new IllegalArgumentException("É obrigatório ter um id de uma receita.");
+        if (dto.getTipoTransacao() == TipoTransacao.ENTRADA) {
+            if (dto.getReceitaId() == null) {
+                throw new IllegalArgumentException("É obrigatório ter um id de uma receita.");
+            }
         }
         if (dto.getOrigemTransacao() == null) {
             throw new IllegalArgumentException("A origem da transação é obrigatório.");

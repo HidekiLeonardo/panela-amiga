@@ -25,7 +25,7 @@ public class TransacaoFinanceiraController {
             ) {
         TransacaoFinanceiraDTO transacaoFinanceiraDTO = transacaoFinanceiraService.addTransacao(transacaoFinanceira);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("A transação financeira " + transacaoFinanceira.getId() + " foi adicionada com sucesso!");
+                .body("A transação financeira " + transacaoFinanceiraDTO.getId() + " foi adicionada com sucesso!");
     }
 
     // Mostrar Transação Financeira (ID)
@@ -34,12 +34,7 @@ public class TransacaoFinanceiraController {
             @PathVariable Long id
     ) {
         TransacaoFinanceiraDTO transacaoFinanceiraDTO = transacaoFinanceiraService.mostrarTransacaoID(id);
-        if (transacaoFinanceiraDTO != null) {
-            return ResponseEntity.ok(transacaoFinanceiraDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("A transação financeira com o id " + id + " não existe. Tente novamente...");
-        }
+        return ResponseEntity.ok(transacaoFinanceiraDTO);
     }
 
     // Mostrar Transações Financeiras

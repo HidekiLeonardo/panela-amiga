@@ -56,7 +56,7 @@ public class ReceitaController {
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "201",
+                    responseCode = "200",
                     description = "Exibe a receita pelo ID indicado pelo usuário",
                     content = @Content(mediaType = "application/json")
             ),
@@ -71,12 +71,7 @@ public class ReceitaController {
             @PathVariable Long id
     ) {
         ReceitaDTO receitaDTO = receitaService.mostrarReceita(id);
-        if (receitaDTO != null) {
-            return ResponseEntity.ok(receitaDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("A receita com o id " + id + " não existe. Tente novamente...");
-        }
+        return ResponseEntity.ok(receitaDTO);
     }
 
     // Mostar Receitas
@@ -121,12 +116,7 @@ public class ReceitaController {
             @RequestBody ReceitaDTO receita
     ) {
         ReceitaDTO receitaDTO = receitaService.alterarReceita(id, receita);
-        if (receitaDTO != null) {
-            return ResponseEntity.ok(receitaDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("A receita com o id " + id + " não existe. Tente novamente...");
-        }
+        return ResponseEntity.ok(receitaDTO);
     }
 
     // Deletar Receita
@@ -149,12 +139,7 @@ public class ReceitaController {
             @Parameter(description = "ID do objeto")
             @PathVariable Long id
     ) {
-        if (receitaService.mostrarReceita(id) != null) {
-            receitaService.deletarReceita(id);
-            return ResponseEntity.ok("A receita com o id " + id + " foi deletada com sucesso!");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("A receita com o id " + id + " não existe. Tente novamente...");
-        }
+        receitaService.deletarReceita(id);
+        return ResponseEntity.ok("A receita com o id " + id + " foi deletada com sucesso!");
     }
 }

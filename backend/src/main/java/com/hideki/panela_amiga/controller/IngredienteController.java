@@ -5,6 +5,7 @@ import com.hideki.panela_amiga.service.IngredienteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -34,12 +35,7 @@ public class IngredienteController {
             @PathVariable Long id
     ) {
         IngredienteDTO ingredienteDTO = ingredienteService.mostrarIngrediente(id);
-        if (ingredienteDTO != null) {
-            return ResponseEntity.ok(ingredienteDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("O ingrediente com o id " + id + " não existe. Tente novamente...");
-        }
+        return ResponseEntity.ok(ingredienteDTO);
     }
 
     // Mostrar Ingredientes (Nome)
@@ -49,6 +45,15 @@ public class IngredienteController {
     // Mostrar Ingredientes (Fornecedor)
 
     // Mostrar Ingredientes (Próximo da validade)
+    @GetMapping("/proximos-vencimento")
+    public ResponseEntity<?> mostrarIngredientesProximoVencimento(
+            @RequestParam(defaultValue = "7") Integer dia
+    ) {
+        LocalDate dataLimite = LocalDate.now().plusDays(dia);
+        return ResponseEntity.ok(
+                ingredienteService.buscarIngredienteProximoValidade(dataLimite)
+        );
+    }
 
     // Mostrar Ingredientes (Sem estoque)
 
@@ -68,12 +73,7 @@ public class IngredienteController {
             @RequestBody IngredienteDTO ingrediente
     ) {
         IngredienteDTO ingredienteDTO = ingredienteService.alterarIngrediente(id, ingrediente);
-        if (ingredienteDTO != null) {
-            return ResponseEntity.ok(ingredienteDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("O ingrediente com o id " + id + " não existe. Tente novamente...");
-        }
+        return ResponseEntity.ok(ingredienteDTO);
     }
 
     // Deletar Ingrediente
@@ -81,12 +81,7 @@ public class IngredienteController {
     public ResponseEntity<String> deletarIngrediente(
             @PathVariable Long id
     ) {
-        if (ingredienteService.mostrarIngrediente(id) != null) {
-            ingredienteService.deletarIngrediente(id);
-            return ResponseEntity.ok("O ingrediente com o id " + id + " foi deletado com sucesso!");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("O ingrediente com o id " + id + " não existe. Tente novamente...");
-        }
+        ingredienteService.deletarIngrediente(id);
+        return ResponseEntity.ok("O ingrediente com o id " + id + " foi deletado com sucesso!");
     }
 }

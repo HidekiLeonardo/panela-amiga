@@ -47,4 +47,8 @@ public class TransacaoFinanceiraModel {
     @JoinColumn(name = "receita_id")
     @ToString.Exclude
     private ReceitaModel receita;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioModel usuario;
 }

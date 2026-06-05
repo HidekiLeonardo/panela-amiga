@@ -47,4 +47,10 @@ public class IngredienteModel {
     @Column(name = "data_atualizacao")
     @UpdateTimestamp
     private LocalDateTime dataAtualizacao;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioModel usuario;
+
+
 }

@@ -5,8 +5,11 @@ import com.hideki.panela_amiga.exception.IngredienteNotFoundException;
 import com.hideki.panela_amiga.exception.IngredienteUsingException;
 import com.hideki.panela_amiga.mapper.IngredienteMapper;
 import com.hideki.panela_amiga.model.IngredienteModel;
+import com.hideki.panela_amiga.model.UsuarioModel;
 import com.hideki.panela_amiga.repository.IngredienteRepository;
 import com.hideki.panela_amiga.repository.ReceitaRepository;
+import com.hideki.panela_amiga.repository.UsuarioRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,17 +24,21 @@ public class IngredienteService {
     private final IngredienteRepository ingredienteRepository;
     private final IngredienteMapper ingredienteMapper;
     private final ReceitaRepository receitaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public IngredienteService(IngredienteRepository ingredienteRepository, IngredienteMapper ingredienteMapper, ReceitaRepository receitaRepository) {
+    public IngredienteService(IngredienteRepository ingredienteRepository, IngredienteMapper ingredienteMapper, ReceitaRepository receitaRepository, UsuarioRepository usuarioRepository) {
         this.ingredienteRepository = ingredienteRepository;
         this.ingredienteMapper = ingredienteMapper;
         this.receitaRepository = receitaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // Adicionar Ingrediente
     public IngredienteDTO addIngrediente(IngredienteDTO ingredienteDTO) {
+        UsuarioModel usuario = getUsuarioLogado();
         validarIngrediente(ingredienteDTO);
         IngredienteModel ingrediente = ingredienteMapper.toModel(ingredienteDTO);
+        ingrediente.setUsuario(usuario);
         ingrediente = ingredienteRepository.save(ingrediente);
         return ingredienteMapper.toDTO(ingrediente);
     }
@@ -46,7 +53,8 @@ public class IngredienteService {
 
     // Mostrar Ingredientes
     public List<IngredienteDTO> mostrarTodosIngredientes() {
-        List<IngredienteModel> ingredientes = ingredienteRepository.findAll();
+        UsuarioModel usuario = getUsuarioLogado();
+        List<IngredienteModel> ingredientes = ingredienteRepository.findAllByUsuario(usuario);
         return ingredientes.stream()
                 .map(ingredienteMapper::toDTO)
                 .collect(Collectors.toList());
@@ -103,7 +111,8 @@ public class IngredienteService {
 
     // Buscar Ingredientes Proximo do Vencimento
     public List<IngredienteDTO> buscarIngredienteProximoValidade(LocalDate dataLimite) {
-        return ingredienteRepository.findAll().stream()
+        UsuarioModel usuario = getUsuarioLogado();
+        return ingredienteRepository.findAllByUsuario(usuario).stream()
                 .filter(ingrediente -> {
                     LocalDate validade = ingrediente.getDataValidade();
                     return !validade.isBefore(LocalDate.now()) &&
@@ -115,7 +124,8 @@ public class IngredienteService {
 
     // Buscar Ingredientes Sem Estoque
     public List<IngredienteDTO> buscarIngredientesSemEstoque() {
-        List<IngredienteModel> ingredientes = ingredienteRepository.findAll();
+        UsuarioModel usuario = getUsuarioLogado();
+        List<IngredienteModel> ingredientes = ingredienteRepository.findAllByUsuario(usuario);
         return ingredientes.stream()
                 .filter(ingrediente ->
                     ingrediente.getQuantidadeEstoque().compareTo(BigDecimal.ZERO) == 0)
@@ -151,5 +161,13 @@ public class IngredienteService {
         if (dto.getCustoUnitario() != null && dto.getCustoUnitario().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Custo unitário não pode ser negativo.");
         }
+    }
+
+    private UsuarioModel getUsuarioLogado() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não autenticado."));
     }
 }

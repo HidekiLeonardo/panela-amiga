@@ -128,9 +128,9 @@ export function Receitas() {
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Receitas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Receitas</h2>
           <p className="text-muted-foreground text-sm mt-1">Cardápio com custo de produção</p>
         </div>
         <Button onClick={abrirCriar}><Plus size={16} /> Nova Receita</Button>

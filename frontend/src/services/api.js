@@ -5,6 +5,17 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 })
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token")
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+export const authService = {
+  login: (data) => api.post("/auth/login", data),
+  register: (data) => api.post("/auth/register", data),
+}
+
 export const ingredientesService = {
   listar: () => api.get("/ingredientes"),
   buscar: (id) => api.get(`/ingredientes/${id}`),
@@ -28,11 +39,18 @@ export const transacoesService = {
 }
 
 export const relatorioService = {
-  buscar: () => api.get("/relatorio-financeiro"),
+  buscar: (inicio, fim) => {
+    const params = new URLSearchParams()
+    if (inicio) params.append("inicio", inicio)
+    if (fim) params.append("fim", fim)
+    const query = params.toString()
+    return api.get(`/relatorio-financeiro${query ? `?${query}` : ""}`)
+  },
 }
 
 export const alertasService = {
-  proximosVencimento: (dias = 7) => api.get(`/ingredientes/proximos-vencimento?dia=${dias}`),
+  proximosVencimento: (dias = 7) =>
+    api.get(`/ingredientes/proximos-vencimento?dia=${dias}`),
 }
 
 export default api

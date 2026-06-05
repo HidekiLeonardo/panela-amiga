@@ -1,13 +1,15 @@
 package com.hideki.panela_amiga.service;
 
 import com.hideki.panela_amiga.dto.ReceitaDTO;
-import com.hideki.panela_amiga.exception.IngredienteNotFoundException;
 import com.hideki.panela_amiga.exception.ReceitaNotFoundException;
 import com.hideki.panela_amiga.mapper.IngredienteReceitaMapper;
 import com.hideki.panela_amiga.mapper.ReceitaMapper;
 import com.hideki.panela_amiga.model.ReceitaModel;
+import com.hideki.panela_amiga.model.UsuarioModel;
 import com.hideki.panela_amiga.model.enums.CategoriaReceita;
 import com.hideki.panela_amiga.repository.ReceitaRepository;
+import com.hideki.panela_amiga.repository.UsuarioRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,17 +23,21 @@ public class ReceitaService {
     private final ReceitaRepository receitaRepository;
     private final ReceitaMapper receitaMapper;
     private final IngredienteReceitaMapper ingredienteReceitaMapper;
+    private final UsuarioRepository usuarioRepository;
 
-    public ReceitaService(ReceitaRepository receitaRepository, ReceitaMapper receitaMapper, IngredienteReceitaMapper ingredienteReceitaMapper) {
+    public ReceitaService(ReceitaRepository receitaRepository, ReceitaMapper receitaMapper, IngredienteReceitaMapper ingredienteReceitaMapper, UsuarioRepository usuarioRepository) {
         this.receitaRepository = receitaRepository;
         this.receitaMapper = receitaMapper;
         this.ingredienteReceitaMapper = ingredienteReceitaMapper;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // Adicionar Receita
     public ReceitaDTO addReceita(ReceitaDTO receitaDTO) {
         validarReceita(receitaDTO);
+        UsuarioModel usuario = getUsuarioLogado();
         ReceitaModel receita = receitaMapper.toModel(receitaDTO);
+        receita.setUsuario(usuario);
         BigDecimal custoTotal = receita.getIngredientes().stream()
                 .map(item -> {
                     BigDecimal quantidade = item.getQuantidade();
@@ -54,7 +60,8 @@ public class ReceitaService {
 
     // Mostar Receitas
     public List<ReceitaDTO> mostrarTodasReceitas() {
-        List<ReceitaModel> receitas = receitaRepository.findAll();
+        UsuarioModel usuario = getUsuarioLogado();
+        List<ReceitaModel> receitas = receitaRepository.findAllByUsuario(usuario);
         return receitas.stream()
                 .map(receitaMapper::toDTO)
                 .collect(Collectors.toList());
@@ -103,7 +110,8 @@ public class ReceitaService {
 
     // Buscar por Categoria
     public List<ReceitaDTO> buscarPorCategoria(CategoriaReceita categoria) {
-        List<ReceitaModel> receitas = receitaRepository.findByCategoria(categoria);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<ReceitaModel> receitas = receitaRepository.findByCategoriaAndUsuario(categoria, usuario);
         return receitas.stream()
                 .map(receitaMapper::toDTO)
                 .collect(Collectors.toList());
@@ -130,5 +138,13 @@ public class ReceitaService {
         if (dto.getIngredientes() == null || dto.getIngredientes().isEmpty()) {
             throw new IllegalArgumentException("A lista de ingredientes é obrigatória.");
         }
+    }
+
+    private UsuarioModel getUsuarioLogado() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não autenticado."));
     }
 }

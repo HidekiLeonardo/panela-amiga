@@ -4,15 +4,14 @@ import com.hideki.panela_amiga.dto.TransacaoFinanceiraDTO;
 import com.hideki.panela_amiga.exception.EstoqueInsuficienteException;
 import com.hideki.panela_amiga.exception.TransacaoFinanceiraNotFoundException;
 import com.hideki.panela_amiga.mapper.TransacaoFinanceiraMapper;
-import com.hideki.panela_amiga.model.IngredienteModel;
-import com.hideki.panela_amiga.model.IngredienteReceita;
-import com.hideki.panela_amiga.model.ReceitaModel;
-import com.hideki.panela_amiga.model.TransacaoFinanceiraModel;
+import com.hideki.panela_amiga.model.*;
 import com.hideki.panela_amiga.model.enums.OrigemTransacao;
 import com.hideki.panela_amiga.model.enums.TipoTransacao;
 import com.hideki.panela_amiga.repository.IngredienteRepository;
 import com.hideki.panela_amiga.repository.ReceitaRepository;
 import com.hideki.panela_amiga.repository.TransacaoFinanceiraRepository;
+import com.hideki.panela_amiga.repository.UsuarioRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,18 +27,22 @@ public class TransacaoFinanceiraService {
     private final TransacaoFinanceiraMapper transacaoFinanceiraMapper;
     private final ReceitaRepository receitaRepository;
     private final IngredienteRepository ingredienteRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public TransacaoFinanceiraService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper, IngredienteRepository ingredienteRepository, ReceitaRepository receitaRepository) {
+    public TransacaoFinanceiraService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper, IngredienteRepository ingredienteRepository, ReceitaRepository receitaRepository, UsuarioRepository usuarioRepository) {
         this.transacaoFinanceiraRepository = transacaoFinanceiraRepository;
         this.transacaoFinanceiraMapper = transacaoFinanceiraMapper;
         this.receitaRepository = receitaRepository;
         this.ingredienteRepository = ingredienteRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
 // Adicionar Transacao
     public TransacaoFinanceiraDTO addTransacao(TransacaoFinanceiraDTO transacaoFinanceiraDTO) {
         validarTransacao(transacaoFinanceiraDTO);
+        UsuarioModel usuario = getUsuarioLogado();
         TransacaoFinanceiraModel transacaoFinanceira = transacaoFinanceiraMapper.toModel(transacaoFinanceiraDTO);
+        transacaoFinanceira.setUsuario(usuario);
         transacaoFinanceira = transacaoFinanceiraRepository.save(transacaoFinanceira);
         if (transacaoFinanceira.getTipoTransacao() == TipoTransacao.ENTRADA) {
             consumirEstoque(transacaoFinanceira.getReceita());
@@ -58,7 +61,8 @@ public class TransacaoFinanceiraService {
 
     // Exibir Transacoes
     public List<TransacaoFinanceiraDTO> mostrarTodasTransacoes() {
-        List<TransacaoFinanceiraModel> transacaoFinanceira = transacaoFinanceiraRepository.findAll();
+        UsuarioModel usuario = getUsuarioLogado();
+        List<TransacaoFinanceiraModel> transacaoFinanceira = transacaoFinanceiraRepository.findAllByUsuario(usuario);
         return transacaoFinanceira.stream()
                 .map(transacaoFinanceiraMapper::toDTO)
                 .collect(Collectors.toList());
@@ -126,5 +130,13 @@ public class TransacaoFinanceiraService {
         if (dto.getValor() == null || dto.getValor().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("O valor deve ser maior que zero.");
         }
+    }
+
+    private UsuarioModel getUsuarioLogado() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não autenticado."));
     }
 }

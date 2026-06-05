@@ -14,5 +14,6 @@ export function formatCurrency(value) {
 
 export function formatDate(dateStr) {
   if (!dateStr) return "-"
-  return new Intl.DateTimeFormat("pt-BR").format(new Date(dateStr))
+  const [year, month, day] = String(dateStr).split("T")[0].split("-")
+  return `${day}/${month}/${year}`
 }

@@ -3,8 +3,11 @@ package com.hideki.panela_amiga.service;
 import com.hideki.panela_amiga.dto.RelatorioFinanceiroDTO;
 import com.hideki.panela_amiga.dto.TransacaoFinanceiraDTO;
 import com.hideki.panela_amiga.mapper.TransacaoFinanceiraMapper;
+import com.hideki.panela_amiga.model.UsuarioModel;
 import com.hideki.panela_amiga.model.enums.TipoTransacao;
 import com.hideki.panela_amiga.repository.TransacaoFinanceiraRepository;
+import com.hideki.panela_amiga.repository.UsuarioRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,11 +19,13 @@ import java.util.List;
 public class RelatorioFinanceiroService {
 
     private final TransacaoFinanceiraRepository transacaoFinanceiraRepository;
+    private final UsuarioRepository usuarioRepository;
     private final TransacaoFinanceiraMapper transacaoFinanceiraMapper;
 
-    public RelatorioFinanceiroService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper) {
+    public RelatorioFinanceiroService(TransacaoFinanceiraRepository transacaoFinanceiraRepository, TransacaoFinanceiraMapper transacaoFinanceiraMapper, UsuarioRepository usuarioRepository) {
         this.transacaoFinanceiraRepository = transacaoFinanceiraRepository;
         this.transacaoFinanceiraMapper = transacaoFinanceiraMapper;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public RelatorioFinanceiroDTO gerarRelatorio(
@@ -28,14 +33,14 @@ public class RelatorioFinanceiroService {
             LocalDate dataFim
     ) {
         List<TransacaoFinanceiraDTO> transacaoFinanceira;
-
+        UsuarioModel usuario = getUsuarioLogado();
         if (dataInicio != null  && dataFim != null){
-            transacaoFinanceira = transacaoFinanceiraRepository.findByDataBetween(dataInicio, dataFim)
+            transacaoFinanceira = transacaoFinanceiraRepository.findByDataBetweenAndUsuario(dataInicio, dataFim, usuario)
                     .stream()
                     .map(transacaoFinanceiraMapper::toDTO)
                     .toList();
         } else {
-            transacaoFinanceira = transacaoFinanceiraRepository.findAll()
+            transacaoFinanceira = transacaoFinanceiraRepository.findAllByUsuario(usuario)
                     .stream()
                     .map(transacaoFinanceiraMapper::toDTO)
                     .toList();
@@ -68,5 +73,13 @@ public class RelatorioFinanceiroService {
                 ticketMedio,
                 quantidadeVendas
         );
+    }
+
+    private UsuarioModel getUsuarioLogado() {
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não autenticado"));
     }
 }

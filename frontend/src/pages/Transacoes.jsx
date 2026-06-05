@@ -9,7 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/utils"
 import { Plus, X, TrendingUp, TrendingDown } from "lucide-react"
 
 const TIPOS = ["ENTRADA", "SAIDA"]
-const FORMAS_PAGAMENTO = ["PIX", "DINEHIRO", "CARTAO"]
+const FORMAS_PAGAMENTO = ["PIX", "DINHEIRO", "CARTAO"]
 const ORIGENS = ["IFOOD", "WHATSAPP", "INSTAGRAM", "LOCAL", "LOJA"]
 
 const transacaoVazia = {
@@ -45,7 +45,11 @@ export function Transacoes() {
 
   function handleChange(e) {
     const { name, value } = e.target
-    setFormulario((prev) => ({ ...prev, [name]: value }))
+    setFormulario((prev) => {
+      const next = { ...prev, [name]: value }
+      if (name === "tipoTransacao" && value === "SAIDA") next.receitaId = ""
+      return next
+    })
   }
 
   async function handleSalvar(e) {
@@ -71,9 +75,9 @@ export function Transacoes() {
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Transações</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Transações</h2>
           <p className="text-muted-foreground text-sm mt-1">Entradas e saídas financeiras</p>
         </div>
         <Button onClick={() => setFormulario({ ...transacaoVazia })}>
@@ -131,13 +135,15 @@ export function Transacoes() {
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Receita vinculada (opcional)</label>
-                <Select name="receitaId" value={formulario.receitaId} onChange={handleChange}>
-                  <option value="">Nenhuma</option>
-                  {receitas.map((r) => <option key={r.id} value={r.id}>{r.nome}</option>)}
-                </Select>
-              </div>
+              {formulario.tipoTransacao === "ENTRADA" && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Receita vinculada <span className="text-destructive">*</span></label>
+                  <Select name="receitaId" value={formulario.receitaId} onChange={handleChange} required>
+                    <option value="">Selecione a receita vendida</option>
+                    {receitas.map((r) => <option key={r.id} value={r.id}>{r.nome}</option>)}
+                  </Select>
+                </div>
+              )}
 
               <div className="sm:col-span-2 flex gap-3 pt-2">
                 <Button type="submit" disabled={salvando}>{salvando ? "Salvando..." : "Salvar"}</Button>
@@ -151,19 +157,19 @@ export function Transacoes() {
       {loading ? (
         <p className="text-muted-foreground">Carregando...</p>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
+        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">Data</th>
-                <th className="text-left px-4 py-3 font-medium">Descrição</th>
-                <th className="text-left px-4 py-3 font-medium">Tipo</th>
-                <th className="text-left px-4 py-3 font-medium">Origem</th>
-                <th className="text-left px-4 py-3 font-medium">Pagamento</th>
-                <th className="text-right px-4 py-3 font-medium">Valor</th>
+            <thead>
+              <tr className="bg-muted/60 border-b border-border">
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Data</th>
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Descrição</th>
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Tipo</th>
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Origem</th>
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Pagamento</th>
+                <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wide text-muted-foreground">Valor</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border">
               {transacoes.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">

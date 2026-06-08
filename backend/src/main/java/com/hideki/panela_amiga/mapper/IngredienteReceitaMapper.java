@@ -4,6 +4,7 @@ import com.hideki.panela_amiga.dto.IngredienteReceitaDTO;
 import com.hideki.panela_amiga.model.IngredienteReceita;
 import com.hideki.panela_amiga.model.IngredienteModel;
 import com.hideki.panela_amiga.model.ReceitaModel;
+import com.hideki.panela_amiga.model.UsuarioModel;
 import com.hideki.panela_amiga.repository.IngredienteRepository;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,8 @@ public class IngredienteReceitaMapper {
         this.ingredienteRepository = ingredienteRepository;
     }
 
-    public IngredienteReceita toModel(IngredienteReceitaDTO dto, ReceitaModel receita) {
-        IngredienteModel ingrediente = ingredienteRepository.findById(dto.getIngredienteId())
+    public IngredienteReceita toModel(IngredienteReceitaDTO dto, ReceitaModel receita, UsuarioModel usuario) {
+        IngredienteModel ingrediente = ingredienteRepository.findByIdAndUsuario(dto.getIngredienteId(), usuario)
                 .orElseThrow(() -> new RuntimeException("Ingrediente não encontrado."));
 
         IngredienteReceita ir = new IngredienteReceita();

@@ -2,6 +2,7 @@ package com.hideki.panela_amiga.mapper;
 
 import com.hideki.panela_amiga.dto.ReceitaDTO;
 import com.hideki.panela_amiga.model.ReceitaModel;
+import com.hideki.panela_amiga.model.UsuarioModel;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +14,7 @@ public class ReceitaMapper {
         this.ingredienteReceitaMapper = ingredienteReceitaMapper;
     }
 
-    public ReceitaModel toModel(ReceitaDTO dto) {
+    public ReceitaModel toModel(ReceitaDTO dto, UsuarioModel usuario) {
         ReceitaModel receitaModel = new ReceitaModel();
         receitaModel.setId(dto.getId());
         receitaModel.setNome(dto.getNome());
@@ -33,7 +34,7 @@ public class ReceitaMapper {
                             .stream()
                             .map(item ->
                                     ingredienteReceitaMapper
-                                            .toModel(item, receitaModel))
+                                            .toModel(item, receitaModel, usuario))
                                     .toList();
 
             receitaModel.setIngredientes(ingredientes);

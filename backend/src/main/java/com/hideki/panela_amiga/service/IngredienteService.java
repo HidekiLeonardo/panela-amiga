@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,10 +44,10 @@ public class IngredienteService {
 
     // Mostrar Ingrediente(ID)
     public IngredienteDTO mostrarIngrediente(Long id) {
-        Optional<IngredienteModel> ingrediente = ingredienteRepository.findById(id);
-        return ingrediente
-                .map(ingredienteMapper::toDTO)
-                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        IngredienteModel ingrediente = ingredienteRepository.findByIdAndUsuario(id, usuario)
+                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente não encontrado."));
+        return ingredienteMapper.toDTO(ingrediente);
     }
 
     // Mostrar Ingredientes
@@ -63,8 +62,9 @@ public class IngredienteService {
     // Alterar Ingrediente
     public IngredienteDTO alterarIngrediente(Long id, IngredienteDTO ingredienteDTO) {
         validarIngrediente(ingredienteDTO);
-        IngredienteModel ingrediente = ingredienteRepository.findById(id)
-                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        IngredienteModel ingrediente = ingredienteRepository.findByIdAndUsuario(id, usuario)
+                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente não encontrado."));
         ingrediente.setNome(ingredienteDTO.getNome());
         ingrediente.setMarca(ingredienteDTO.getMarca());
         ingrediente.setUnidadeDeMedida(ingredienteDTO.getUnidadeDeMedida());
@@ -77,10 +77,11 @@ public class IngredienteService {
 
     // Deletar Ingrediente
     public void deletarIngrediente(Long id) {
-        IngredienteModel ingrediente = ingredienteRepository.findById(id)
-                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        IngredienteModel ingrediente = ingredienteRepository.findByIdAndUsuario(id, usuario)
+                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente não encontrado."));
         if (receitaRepository.existeReceitaAtivaComIngrediente(id)){
-            throw new IngredienteUsingException("Ingrediente com o ID " + id + " está em uso. Não será possível deletar");
+            throw new IngredienteUsingException("Ingrediente está em uso. Não será possível deletar");
         }
         ingredienteRepository.deleteById(id);
     }
@@ -135,8 +136,9 @@ public class IngredienteService {
 
     // Atualizar Estoque
     public IngredienteDTO atualizarEstoqueIngrediente(Long id, BigDecimal novaQuantidade) {
-        IngredienteModel ingrediente = ingredienteRepository.findById(id)
-                .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        IngredienteModel ingrediente = ingredienteRepository.findByIdAndUsuario(id, usuario)
+                        .orElseThrow(() -> new IngredienteNotFoundException("Ingrediente não encontrado."));
         ingrediente.setQuantidadeEstoque(novaQuantidade);
         return ingredienteMapper.toDTO(ingredienteRepository.save(ingrediente));
     }

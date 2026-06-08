@@ -36,26 +36,20 @@ public class ReceitaService {
     public ReceitaDTO addReceita(ReceitaDTO receitaDTO) {
         validarReceita(receitaDTO);
         UsuarioModel usuario = getUsuarioLogado();
-        ReceitaModel receita = receitaMapper.toModel(receitaDTO);
+        ReceitaModel receita = receitaMapper.toModel(receitaDTO, usuario);
         receita.setUsuario(usuario);
-        BigDecimal custoTotal = receita.getIngredientes().stream()
-                .map(item -> {
-                    BigDecimal quantidade = item.getQuantidade();
-                    BigDecimal custoUnitario = item.getIngrediente().getCustoUnitario();
-                    return custoUnitario.multiply(quantidade);
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        receita.setCustoTotal(custoTotal);
+        receita.setCustoTotal(calcularCustoTotal(receita));
         receita = receitaRepository.save(receita);
         return receitaMapper.toDTO(receita);
     }
 
     // Mostrar Receita (ID)
     public ReceitaDTO mostrarReceita(Long id) {
-        Optional<ReceitaModel> receita = receitaRepository.findById(id);
+        UsuarioModel usuario = getUsuarioLogado();
+        Optional<ReceitaModel> receita = receitaRepository.findByIdAndUsuario(id,usuario);
         return receita
                 .map(receitaMapper::toDTO)
-                .orElseThrow(() -> new ReceitaNotFoundException("Receita com o ID " + id + " não foi encontrado."));
+                .orElseThrow(() -> new ReceitaNotFoundException("Receita não foi encontrada."));
     }
 
     // Mostar Receitas
@@ -69,40 +63,42 @@ public class ReceitaService {
 
     // Alterar Receita
     public ReceitaDTO alterarReceita(Long id, ReceitaDTO receitaDTO) {
+        UsuarioModel usuario = getUsuarioLogado();
         validarReceita(receitaDTO);
-        ReceitaModel receita = receitaRepository.findById(id)
-                .orElseThrow(() -> new ReceitaNotFoundException("Receita com o ID " + id + " não foi encontrado."));
+        ReceitaModel receita = receitaRepository.findByIdAndUsuario(id, usuario)
+                .orElseThrow(() -> new ReceitaNotFoundException("Receita não foi encontrada."));
         receita.setNome(receitaDTO.getNome());
 
         var ingredientes = receitaDTO.getIngredientes()
-                        .stream()
-                        .map(item -> ingredienteReceitaMapper.toModel(item, receita))
-                        .collect(Collectors.toList());
-
+                .stream()
+                .map(item -> ingredienteReceitaMapper.toModel(item, receita, usuario))
+                .collect(Collectors.toList());
         receita.getIngredientes().clear();
         receita.getIngredientes().addAll(ingredientes);
 
+        receita.setCustoTotal(calcularCustoTotal(receita));
         receita.setCategoria(receitaDTO.getCategoria());
         receita.setModoPreparo(receitaDTO.getModoPreparo());
         receita.setTempoPreparo(receitaDTO.getTempoPreparo());
         receita.setPorcoes(receitaDTO.getPorcoes());
         receita.setRendimento(receitaDTO.getRendimento());
-        receita.setCustoTotal(receitaDTO.getCustoTotal());
         receita.setPrecoVenda(receitaDTO.getPrecoVenda());
         return receitaMapper.toDTO(receitaRepository.save(receita));
     }
 
     // Deletar Receita
     public void deletarReceita(Long id) {
-        ReceitaModel receita = receitaRepository.findById(id)
-                        .orElseThrow(() -> new ReceitaNotFoundException("Receita com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        ReceitaModel receita = receitaRepository.findByIdAndUsuario(id, usuario)
+                        .orElseThrow(() -> new ReceitaNotFoundException("Receita não foi encontrada."));
         receita.setAtivo(false);
         receitaRepository.save(receita);
     }
 
     // Buscar por Nome
     public List<ReceitaDTO> buscarPorNome(String nome) {
-        List<ReceitaModel> receitas = receitaRepository.findByNomeContainingIgnoreCase(nome);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<ReceitaModel> receitas = receitaRepository.findByNomeContainingIgnoreCaseAndUsuario(nome, usuario);
         return receitas.stream()
                 .map(receitaMapper::toDTO)
                 .collect(Collectors.toList());
@@ -119,8 +115,9 @@ public class ReceitaService {
 
     // Calcular CustoTotal Receita
     public BigDecimal custoTotalReceita(Long id) {
-        ReceitaModel receita = receitaRepository.findById(id)
-                .orElseThrow(() -> new ReceitaNotFoundException("Receita com o ID " + id + " não foi encontrado."));
+        UsuarioModel usuario = getUsuarioLogado();
+        ReceitaModel receita = receitaRepository.findByIdAndUsuario(id, usuario)
+                .orElseThrow(() -> new ReceitaNotFoundException("Receita não foi encontrada."));
         return receita.getCustoTotal() != null ? receita.getCustoTotal() : BigDecimal.ZERO;
     }
 
@@ -146,5 +143,16 @@ public class ReceitaService {
                 .getName();
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não autenticado."));
+    }
+
+    private BigDecimal calcularCustoTotal(ReceitaModel receita) {
+        BigDecimal custoTotal = receita.getIngredientes().stream()
+                .map(item -> {
+                    BigDecimal quantidade = item.getQuantidade();
+                    BigDecimal custoUnitario = item.getIngrediente().getCustoUnitario();
+                    return custoUnitario.multiply(quantidade);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return custoTotal;
     }
 }

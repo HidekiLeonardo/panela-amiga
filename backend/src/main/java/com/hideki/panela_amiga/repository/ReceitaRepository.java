@@ -8,13 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReceitaRepository extends JpaRepository<ReceitaModel, Long> {
-    List<ReceitaModel> findByCategoria(CategoriaReceita categoria);
-    List<ReceitaModel> findByNomeContainingIgnoreCase(String nome);
     List<ReceitaModel> findAllByUsuario(UsuarioModel usuario);
     List<ReceitaModel> findByNomeContainingIgnoreCaseAndUsuario(String nome, UsuarioModel usuario);
     List<ReceitaModel> findByCategoriaAndUsuario(CategoriaReceita categoria, UsuarioModel usuario);
+    Optional<ReceitaModel> findByIdAndUsuario(Long id, UsuarioModel usuario);
 
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
             "FROM ReceitaModel r JOIN r.ingredientes ir JOIN ir.ingrediente i " +

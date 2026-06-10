@@ -13,6 +13,7 @@ import com.hideki.panela_amiga.repository.TransacaoFinanceiraRepository;
 import com.hideki.panela_amiga.repository.UsuarioRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +39,7 @@ public class TransacaoFinanceiraService {
     }
 
 // Adicionar Transacao
+    @Transactional
     public TransacaoFinanceiraDTO addTransacao(TransacaoFinanceiraDTO transacaoFinanceiraDTO) {
         validarTransacao(transacaoFinanceiraDTO);
         UsuarioModel usuario = getUsuarioLogado();
@@ -46,17 +48,17 @@ public class TransacaoFinanceiraService {
         transacaoFinanceira = transacaoFinanceiraRepository.save(transacaoFinanceira);
         if (transacaoFinanceira.getTipoTransacao() == TipoTransacao.ENTRADA) {
             consumirEstoque(transacaoFinanceira.getReceita());
-
         }
         return transacaoFinanceiraMapper.toDTO(transacaoFinanceira);
     }
 
     // Buscar Transacao(ID)
     public TransacaoFinanceiraDTO mostrarTransacaoID(Long id) {
-        Optional<TransacaoFinanceiraModel> transacaoFinanceira = transacaoFinanceiraRepository.findById(id);
+        UsuarioModel usuario = getUsuarioLogado();
+        Optional<TransacaoFinanceiraModel> transacaoFinanceira = transacaoFinanceiraRepository.findByIdAndUsuario(id, usuario);
                 return transacaoFinanceira
                         .map(transacaoFinanceiraMapper::toDTO)
-                        .orElseThrow(() -> new TransacaoFinanceiraNotFoundException("Transação com o ID " + id + " não foi encontrado."));
+                        .orElseThrow(() -> new TransacaoFinanceiraNotFoundException("Transação não foi encontrada."));
     }
 
     // Exibir Transacoes
@@ -70,7 +72,8 @@ public class TransacaoFinanceiraService {
 
     // Exibir TransacoesEntreDatas(Data)
     public List<TransacaoFinanceiraDTO> mostrarTransacoesEntreDatas(LocalDate inicio, LocalDate fim) {
-        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByDataBetween(inicio, fim);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByDataBetweenAndUsuario(inicio, fim, usuario);
         return transacoesFinanceiras.stream()
                 .map(transacaoFinanceiraMapper::toDTO)
                 .collect(Collectors.toList());
@@ -78,7 +81,8 @@ public class TransacaoFinanceiraService {
 
     // Exibir Transacoes(Origem)
     public List<TransacaoFinanceiraDTO> mostrarTransacoesPorOrigem(OrigemTransacao origem) {
-        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByOrigemTransacao(origem);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByOrigemTransacaoAndUsuario(origem, usuario);
         return transacoesFinanceiras.stream()
                 .map(transacaoFinanceiraMapper::toDTO)
                 .collect(Collectors.toList());
@@ -86,7 +90,8 @@ public class TransacaoFinanceiraService {
 
     // Exibir Transacoes(TipoTransacao)
     public List<TransacaoFinanceiraDTO> mostrarTransacoesPorTipo(TipoTransacao tipoTransacao){
-        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByTipoTransacao(tipoTransacao);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByTipoTransacaoAndUsuario(tipoTransacao, usuario);
         return transacoesFinanceiras.stream()
                 .map(transacaoFinanceiraMapper::toDTO)
                 .collect(Collectors.toList());
@@ -94,14 +99,16 @@ public class TransacaoFinanceiraService {
 
     // Exibir Transacoes(ReceitaID)
     public List<TransacaoFinanceiraDTO> mostrarTransacoesPorReceitaID(Long receitaID) {
-        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByReceitaId(receitaID);
+        UsuarioModel usuario = getUsuarioLogado();
+        List<TransacaoFinanceiraModel> transacoesFinanceiras = transacaoFinanceiraRepository.findByReceitaIdAndUsuario(receitaID, usuario);
         return transacoesFinanceiras.stream()
                 .map(transacaoFinanceiraMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     private void consumirEstoque(ReceitaModel receita) {
-        ReceitaModel receitaModel = receitaRepository.findById(receita.getId())
+        UsuarioModel usuario = getUsuarioLogado();
+        ReceitaModel receitaModel = receitaRepository.findByIdAndUsuario(receita.getId(), usuario)
                 .orElseThrow(() -> new RuntimeException("Receita não encontrada."));
         for (IngredienteReceita ir : receitaModel.getIngredientes()) {
             IngredienteModel ingredienteModel = ir.getIngrediente();

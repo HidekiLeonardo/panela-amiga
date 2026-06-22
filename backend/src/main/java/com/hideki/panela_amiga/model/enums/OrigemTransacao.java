@@ -5,5 +5,6 @@ public enum OrigemTransacao {
     WHATSAPP,
     INSTAGRAM,
     LOCAL,
-    LOJA
+    LOJA,
+    COMPRA
 }

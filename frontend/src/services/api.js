@@ -11,6 +11,23 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Se o token expirou ou é inválido, o backend responde 401.
+// Limpamos a sessão e mandamos o usuário para o login.
+// Ignoramos as rotas /auth para não interferir no fluxo de login.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const isAuthRoute = error.config?.url?.includes("/auth/")
+    if (error.response?.status === 401 && !isAuthRoute) {
+      localStorage.removeItem("token")
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login"
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export const authService = {
   login: (data) => api.post("/auth/login", data),
   register: (data) => api.post("/auth/register", data),
@@ -36,6 +53,12 @@ export const transacoesService = {
   listar: () => api.get("/transacao"),
   buscar: (id) => api.get(`/transacao/${id}`),
   criar: (data) => api.post("/transacao", data),
+}
+
+export const movimentacoesService = {
+  // Comprar/repor um ingrediente existente: aumenta o estoque e lança
+  // a despesa correspondente no financeiro (tudo no servidor).
+  registrarCompra: (data) => api.post("/movimentacoes-estoque", data),
 }
 
 export const relatorioService = {

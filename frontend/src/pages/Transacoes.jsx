@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatCurrency, formatDate, extractErrorMessage } from "@/lib/utils"
 import { Plus, X, TrendingUp, TrendingDown } from "lucide-react"
 
 const TIPOS = ["ENTRADA", "SAIDA"]
@@ -64,8 +64,8 @@ export function Transacoes() {
       await transacoesService.criar(payload)
       setFormulario(null)
       carregar()
-    } catch {
-      setErro("Erro ao registrar transação.")
+    } catch (err) {
+      setErro(extractErrorMessage(err, "Erro ao registrar transação."))
     } finally {
       setSalvando(false)
     }

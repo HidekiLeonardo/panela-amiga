@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { relatorioService, alertasService } from "@/services/api"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatCurrency, formatDate, extractErrorMessage } from "@/lib/utils"
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, BarChart3, AlertTriangle, RefreshCw } from "lucide-react"
 
 function StatCard({ title, value, icon: Icon, accent, sub }) {
@@ -80,7 +80,7 @@ export function Dashboard() {
         setRelatorio(relRes.data)
         setProximosVencimento(alertRes.data)
       })
-      .catch(() => setErro("Não foi possível carregar o relatório. O backend está rodando?"))
+      .catch((err) => setErro(extractErrorMessage(err, "Não foi possível carregar o relatório. O backend está rodando?")))
       .finally(() => setLoading(false))
   }
 

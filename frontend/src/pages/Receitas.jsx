@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, extractErrorMessage } from "@/lib/utils"
 import { Plus, Pencil, Trash2, X, PlusCircle, MinusCircle } from "lucide-react"
 
 const CATEGORIAS = ["SOBREMESA", "PRATO_PRINCIPAL", "ENTRADA", "BEBIDA", "LANCHE", "SALADA"]
@@ -109,8 +109,8 @@ export function Receitas() {
       }
       fechar()
       carregar()
-    } catch {
-      setErro("Erro ao salvar receita.")
+    } catch (err) {
+      setErro(extractErrorMessage(err, "Erro ao salvar receita."))
     } finally {
       setSalvando(false)
     }
@@ -121,8 +121,8 @@ export function Receitas() {
     try {
       await receitasService.deletar(id)
       carregar()
-    } catch {
-      setErro("Erro ao remover receita.")
+    } catch (err) {
+      setErro(extractErrorMessage(err, "Erro ao remover receita."))
     }
   }
 

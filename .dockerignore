@@ -1,6 +1,6 @@
+frontend/
 target/
+backend/target/
+.git/
 .idea/
 *.iml
-.mvn/
-mvnw
-mvnw.cmd

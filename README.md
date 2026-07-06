@@ -144,4 +144,4 @@ O app sobe em `http://localhost:5173` (o Vite faz proxy de `/api` para o backend
 ## 👤 Autor
 
 **Leonardo Hideki**
-[GitHub](https://github.com/HidekiLeonardo)
+[LinkedIn](https://www.linkedin.com/in/leonardohidekikuriki/) · [GitHub](https://github.com/HidekiLeonardo)
